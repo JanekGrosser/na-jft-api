@@ -1,4 +1,4 @@
-"use: strict";
+"use strict";
 
 const express = require('express')
 const app = express()
@@ -8,7 +8,7 @@ const enviroment = process.env.NODE_ENV || "development"
 
 const routes = require("./routes")
 
-app.use("/", routes)
+app.use("/api", routes)
 
 app.listen(port, () => {
     console.log(`Server listening @ ${host}:${port}\nEnviroment: ${enviroment}`)
