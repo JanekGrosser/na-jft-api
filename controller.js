@@ -10,6 +10,19 @@ const knex = require('knex')({
     }
   });
 
+function remove_nextlines(data) {
+    return Object.keys(data).reduce((acc, key) => {
+        if (typeof data[key] === "string") {
+	    acc[key] = data[key]
+		.replace(/\s+/g, " ")
+		.trim();
+	} else {
+	    acc[key] = data[key];
+	}
+	return acc;
+    }, {});
+}
+
 function calculatedDayNumber () {
 
     //If it's February 28th or before, just return day number
@@ -45,10 +58,13 @@ exports.getJft = async (req,res) => {
 		}
 
         let data = await knex("jft_"+language)
-        .select()
-		.where({"day_number": today_number})
+            .select()
+	    .where({"day_number": today_number});
 		
-		console.log(`${new Date()}: Fetched meditation number: ${data[0].day_number}`)
+        if (data.length > 0) {
+            data[0] = remove_nextlines(data[0]);
+	    console.log(`${new Date()}: Fetched meditation number: ${data[0].day_number}`)
+	}
 		
         return res.status(200).json(data)
 
@@ -60,7 +76,7 @@ exports.getJft = async (req,res) => {
 
 exports.getMeditations = async (req,res) => {
     try {
-		let language = req.query.lang || "pl"
+	let language = req.query.lang || "pl"
         let today_number = calculatedDayNumber()
 
 		if (!avaiableLanguages.includes(language)){
@@ -68,14 +84,16 @@ exports.getMeditations = async (req,res) => {
 		}
 
         let data = await knex("jft_"+language)
-        .select()
-        .whereIn("day_number", [today_number, (today_number -1), (today_number +1)])
+            .select()
+            .whereIn("day_number", [today_number, (today_number -1), (today_number +1)]);
+
+        data = data.map(remove_nextlines);
 
         for(let key in data) {
           	console.log(`${new Date()}: Fetched meditation number: ${data[key].day_number}`)
         }
 
-		return res.status(200).json(data)
+	return res.status(200).json(data)
 		
     } catch (error) {
         console.log(`${new Date()}: ${error}`)
